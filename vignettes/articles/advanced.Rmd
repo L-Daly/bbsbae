@@ -133,12 +133,29 @@ be necessary. If all or the vast majority of the n parameters have converged
 then inference on population trajectories and trends from the model are
 reliable.
 
+Load our model at: https://github.com/bbsBayes/bbsBayes2/tree/1cfe795a2706a5363ccf83ad593bcb8fe5509187/data by clicking the file HETA_bbs_usgs_gamye.rds, then clicking “Download” to the right.
+
 ```{r, eval = FALSE}
 jags_mod$n.eff #shows the effective sample size for each monitored parameter
 jags_mod$Rhat # shows the Rhat values for each monitored parameter
 ```
 
+<<<<<<< HEAD
 If important monitored parameters have not converged, we recommend inspecting the model diagnostics with the package ggmcmc.
+=======
+#load our Hepatic Tanager model, or create your own to test convergence
+mod<-readRDS("~/Git/bbsBayes2/data/HETA_latlong_gam.rds")
+
+#Or run a model with fewer chains and iterations:
+mod<-stratify(by="bbs_cws",species="Hepatic Tanager")%>%
+  prepare_data()%>%
+  prepare_model(model_variant = "hier",model = "gam")%>%
+  run_model(chains=2, iter_warmup = 10, iter_sampling = 10)
+
+#get convergence information
+conv<-get_convergence(model_output = mod)
+head(conv)
+>>>>>>> 82407fa (update vignettes)
 
 ```{r, eval = FALSE}
 install.packages("ggmcmc")
