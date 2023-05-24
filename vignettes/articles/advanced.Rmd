@@ -132,7 +132,7 @@ be necessary. If all or the vast majority of the n parameters have converged
 then inference on population trajectories and trends from the model are
 reliable.
 
-Click HERE: to download our full models, which take >24 hours to run.
+Download the Hepatic Tanager model stratified by latitude/longitude by clicking "Download" here: https://github.com/L-Daly/bbsbae/blob/25eeb0f974bcdf832b8375422a9ac57c046c62c2/data/HETA_latlong_gam.rds .
 
 ```{r, eval = FALSE}
 library(bayesplot) #to visually check convergence
@@ -243,11 +243,16 @@ mp
 
 ### Geofacet Trajectories
 
-
+Download the Barn Swallow GAMYE spatial model: https://github.com/L-Daly/bbsbae/releases/tag/trial click BASW_spatial_gamye.zip . 
 ```{r, eval = FALSE}
 #load a model with prov_state in the regions to geofacet trajectories
 #read the RDS file from bbsBayes2 github
-basw<-readRDS("~/Git/bbsBayes2/data/Barn_Swallow_gamye_spatial.rds")
+library(readr)
+
+basw <- read_rds(unzip(
+  "BASW_spatial_gamye.zip",
+  "BASW_spatial_gamye.rds"))
+
 indices<-generate_indices(basw,regions=c("prov_state","country","stratum"))
 trends<-generate_trends(indices)
 gf <- plot_geofacet(indices=indices,
@@ -586,10 +591,16 @@ plot_map(fd_slope_trends_prob)
 
 Yes, you can calculate the trend and trajectories for custom combinations of strata, such as the trends for Eastern and Western populations of the Barn Swallow.
 
+Download the Barn Swallow GAMYE spatial model: https://github.com/L-Daly/bbsbae/releases/tag/trial click BASW_spatial_gamye.zip .
+
 ``` {.r}
 #using our downloaded Barn Swallow Gamye example
-   
-mod<-readRDS("~/Git/bbsBayes2/data/Barn_Swallow_gamye_spatial.rds")
+library(readr)
+
+mod<- read_rds(unzip(
+  "BASW_spatial_gamye.zip",
+  "BASW_spatial_gamye.rds"))
+
     
     #get our stratification
 stratification<-stratify(by="bbs_cws","Barn Swallow")

@@ -16,12 +16,12 @@ and specify how the data should be stratified, prepared for Stan, or modelled.
 
 Installation instructions are below.
 
-See the [documentation](https://bbsBayes.github.io/bbsBayes2) for an overview of
+See the [documentation](https://bbsbayes.github.io/bbsBayes2/articles/bbsBayes2.html) for an overview of
 how to use bbsBayes2.
 
 Additional resources:
 
-* [Introductory bbsBayes Workshop](https://github.com/AdamCSmithCWS/bbsBayes_Intro_Workshop)
+* [Introductory bbsBayes Workshop]
 * [Journal Article with worked example](https://doi.org/10.5334/jors.329)
 
 ## Installation
