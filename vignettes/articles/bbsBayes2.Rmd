@@ -110,7 +110,7 @@ See the articles on
 [custom stratifications](articles/custom_stratification) for more details and 
 examples.
 
-Available species can be explore using the `search_species()` function.
+Available species can be explore using the `search_species()` function. Note: if you're just messing around with the package we recommend using range restricted species such as the Hepatic Tanager, Pacific Wren, Scissor-tailed Flycatcher and Cerulean Warbler.
 
 ### Prepare the data
 
@@ -141,7 +141,12 @@ is 4. In the interest of speed for this example, we are using much lower values,
 but note that this almost certainly will result in problems with our model.
 
 ```{r, eval = FALSE}
-m <- run_model(md, iter_sampling = 20, iter_warmup = 20, chains = 2)
+m <- run_model(md, iter_sampling = 100, iter_warmup = 500, chains = 2)
+```
+
+OR you can skip this step for now, and test out package features using one of our finished models: HERE.
+```{r}
+m<-readRDS("HETA_bbs_usgs_gamye.rds")
 ```
 
 ### Explore the model outputs
@@ -193,22 +198,24 @@ plot_map(t)
 
 ###Example models
 A model with a suitable number of iterations takes a long time to run (the barn swallow model below took 54 hours)! Below are three full models run with 1000 iterations and four chains. Use these to test out some of the features!
+
+Download our models HERE.
 ```{r}
 #First is a spatial GAMYE model for the Barn Swallow
-basw <- readRDS("~/Git/bbsBayes2/data/Barn_Swallow_gamye_spatial.rds")
+basw <- readRDS("Barn_Swallow_gamye_spatial.rds")
 #investigate model meta data
 basw$meta_data
 #length of run-time in seconds
 basw$model_fit$time()
 
 #Next we have a Hepatic Tanager gamye model
-heta_gamye<- readRDS("~/Git/bbsBayes2/data/HETA_bbs_usgs_gamye.rds")
+heta_gamye<- readRDS("HETA_bbs_usgs_gamye.rds")
 heta_gamye$meta_data
 heta_gamye$model_fit$time()
 
 #lastly we have a Hepatic Tanager GAM model, stratified to latitude and longitude
 
-heta_gam <- readRDS("~/Git/bbsBayes2/data/HETA_latlong_gam.rds")
+heta_gam <- readRDS("HETA_latlong_gam.rds")
 heta_gam$meta_data
 heta_gam$model_fit$time()
 ```

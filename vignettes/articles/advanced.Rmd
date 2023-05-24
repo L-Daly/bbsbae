@@ -61,10 +61,10 @@ s <- stratify(by = "bbs_cws", species = "Hepatic Tanager")
 
 Stan models require the data to be sent as a list depending on how the model is
 set up. `prepare_data()` subsets the stratified data based on species and
-wrangles relevant data to use for Stan models.
+wrangles relevant data to use for Stan models.To speed up the process we'll run the model on 10 years of data, the minimum amount of time for reliable estimates.
 
 ```{r}
-p <- prepare_data(s, min_max_route_years = 5)
+p <- prepare_data(s, min_year = 2009,max_year = 2019)
 ```
 
 #### Model Data
@@ -82,12 +82,11 @@ md <- prepare_model(p, model = "gamye", heavy_tailed = TRUE)
 
 ### MCMC
 
-Once the data has been prepared for Stan, the model can be run. This example has a sub-optimal number of iterations and chains. We recommend 1000 iterations and 4 chains. Note that this step usually takes a long time (e.g., 6-12 hours, or even days depending on the species,
-model).
+Once the data has been prepared for Stan, the model can be run. This example has a sub-optimal number of iterations and chains. We recommend 1000 iterations and 4 chains. Note that this step usually takes a long time (e.g., 6-12 hours, or even days depending on the species and/or model).
 
 ```{r, eval = FALSE}
 mod <- run_model(md, output_basename = "cws_base_gamye",
-                 iter_sampling = 10, iter_warmup = 10, chains = 2)
+                 iter_sampling = 100, iter_warmup = 500, chains = 2)
 ```
 
 Alternatively, you can set how many iterations for sampling or warm up steps, 
@@ -133,11 +132,20 @@ be necessary. If all or the vast majority of the n parameters have converged
 then inference on population trajectories and trends from the model are
 reliable.
 
+Click HERE: to download our full models, which take >24 hours to run.
+
 ```{r, eval = FALSE}
 library(bayesplot) #to visually check convergence
 
 #load our Hepatic Tanager model, or create your own to test convergence
-mod<-readRDS("~/Git/bbsBayes2/data/HETA_latlong_gam.rds")
+mod<-readRDS("HETA_latlong_gam.rds")
+
+#Or run a model with fewer chains and iterations, for a 10 year period:
+mod<-stratify(by="bbs_cws",species="Hepatic Tanager")%>%
+  prepare_data(min_year=2009,max_year=2019)%>%
+  prepare_model(model_variant = "hier",model = "gam")%>%
+  run_model(chains=2, iter_warmup = 500, iter_sampling = 100)
+
 #get convergence information
 conv<-get_convergence(model_output = mod)
 head(conv)
@@ -153,7 +161,7 @@ post<-as.array(mod$model_fit$draws())
 get_model_vars(mod)
 
 #create density plots for any parameters, coloured by chain number
-mcmc_dens_overlay(post,pars=c("STRATA","phi","retrans_obs","eta","nu","sdste"))
+mcmc_dens_overlay(post,pars=c("STRATA","sdnoise","retrans_obs","eta","nu","sdste"))
 
 ```
 
@@ -324,18 +332,20 @@ The package has (currently) four status and trend models that differ somewhat in
 
 The slope option estimates the time series as a log-linear regression with random year-effect terms that allow the trajectory to depart from the smooth regression line. It is the model used by the USGS and CWS to estimate bbs trends since 2011. The basic model was first described in 2002 (Link and Sauer 2002; [https://doi.org/10.1890/0012-9658(2002)083[2832:AHAOPC]2.0.CO;2](https://doi.org/10.1890/0012-9658(2002)083%5B2832:AHAOPC%5D2.0.CO;2){.uri}) and its application to the annual status and trend estimates is documented in Sauer and Link (2011; <https://doi.org/10.1525/auk.2010.09220>) and Smith et al. (2014; <https://doi.org/10.22621/cfn.v128i2.1565>).
 
+
+Here we create a model for a 10 year period, using the minimum number of iterations. We reccommend using the defaults, 4 chains, 1000 iterations.
 ``` {.r}
 
-#a quick slope model
+#a quick slope model, for a 10 year period
 strat<- stratify(by="bbs_usgs",species="Hepatic Tanager")
 
-data<- prepare_data(strat,min_max_route_years = 3)
+data<- prepare_data(strat,min_year=2009, max_year= 2019)
 prep<- prepare_model(data,model = "slope",use_pois = TRUE)
   #for prepare_model must be "slope" and use_pois=TRUE
 
 #quick model, we recommend 1000 iterations and 4 chains
-slope_mod<-run_model(prep,chains=3,iter_warmup = 20,
-iter_sampling = 20,save_model = FALSE)
+slope_mod<-run_model(prep,chains=2,iter_warmup = 500,
+iter_sampling = 100,save_model = FALSE)
 
 
 slope_ind <- generate_indices(model_output = slope_mod,
@@ -345,39 +355,27 @@ slope_ind <- generate_indices(model_output = slope_mod,
 slope_plot = plot_indices(indices = slope_ind,
                           add_observed_means = TRUE)
 
-prep_n<-prepare_model(data,model = "gam")
-  
-n_mod<-run_model(prep,chains=3,iter_warmup = 20,
-iter_sampling = 20,save_model = FALSE)
-
-non_slope_ind= generate_indices(model_output = n_mod,
-                                 regions = c("continent"))
-
-non_slope_plot = plot_indices(indices = non_slope_ind,
-                          add_observed_means = TRUE)
-
-library(patchwork)
-#compare slope and non-slope models
-slope_plot[["continent"]] + non_slope_plot[["continent"]]
 ```
 
 <img src="man/figures/AMKE_slope.png"/>
 
 ### gam
 
-The gam option models the time series as a semiparametric smooth using a Generalized Additive Model (GAM) structure. See <https://github.com/AdamCSmithCWS/Smith_Edwards_GAM_BBS> for more information (full publication coming soon)
+The gam option models the time series as a semiparametric smooth using a Generalized Additive Model (GAM) structure. See <https://github.com/AdamCSmithCWS/Smith_Edwards_GAM_BBS> for more information (full publication coming soon). 
+
+Here we create a model for a 10 year period, using the minimum number of iterations. We reccommend using the defaults, 4 chains, 1000 iterations.
 
 ``` {.r}
 
 stratified_data <- stratify(by = "bbs_usgs",species="Scissor-tailed Flycatcher")
     
 data_gam <- prepare_data(stratified_data, 
-                              min_max_route_years = 3)
+                              min_year=2009, max_year=2019)
                               
 gam_prep<-prepare_model(data_gam,model="gam")
 
 #quick model with too few iterations, we recommend 1000 iterations and 3 chains
-gam_mod <- run_model(gam_prep,save_model=FALSE, iter_warmup=20,iter_sampling=20, chains=2)
+gam_mod <- run_model(gam_prep,save_model=FALSE, iter_warmup=500,iter_sampling=100, chains=2)
                                
 gam_ind <- generate_indices(gam_mod,regions = c("continent"))
   
@@ -388,14 +386,16 @@ plot_indices(gam_ind)
 
 ### gamye
 
-The gamye option includes the semiparametric smooth used in the gam option, but also includes random year-effect terms that track annual fluctuations around the smooth. This is the model that the Canadian Wildlife Service is now using for the annual status and trend estimates.
+The gamye option includes the semiparametric smooth used in the gam option, but also includes random year-effect terms that track annual fluctuations around the smooth. This is the model that the Canadian Wildlife Service is now using for the annual status and trend estimates. 
+
+Here we create a model for a 10 year period, using the minimum number of iterations. We reccommend using the defaults, 4 chains, 1000 iterations.
 
 ``` {.r}
 
 ye_strat<- stratify(by="bbs_usgs",species="Hepatic Tanager")
-ye_dat<- prepare_data(ye_strat,min_max_route_years = 3)
+ye_dat<- prepare_data(ye_strat,min_year=2009, max_year=2019)
 ye_prep<-  prepare_model(ye_dat,model = "gamye")
-ye_mod<- run_model(ye_prep, chains=3,iter_warmup = 20,iter_sampling = 20,save_model = FALSE)
+ye_mod<- run_model(ye_prep, chains=3,iter_warmup = 100,iter_sampling = 500,save_model = FALSE)
 
 gamye_ind <- generate_indices(model_output=ye_mod,
                               regions = c("continent"))
@@ -403,7 +403,6 @@ gamye_plot = plot_indices(indices = gamye_ind,
                           add_observed_means = TRUE)
 
 print(gamye_plot)
-
 ```
 
 <img src="man/figures/AMKE_gamye.png"/>
@@ -412,17 +411,19 @@ print(gamye_plot)
 
 The firstdiff option models the time-series as a random-walk from the first year, so that the first-differences of the sequence of year-effects are random effects with mean = 0 and an estimated variance. This model has been described in Link et al. 2017 <https://doi.org/10.1650/CONDOR-17-1.1>
 
+Here we create a model for a 10 year period, using the minimum number of iterations. We reccommend using the defaults, 4 chains, 1000 iterations.
+
 ``` {.r}
 
 stratified_data <- stratify(by = "bbs_usgs",species="Scissor-tailed Flycatcher")
     
 data_gam<- prepare_data(stratified_data, 
-                              min_max_route_years = 3)
+                              min_year = 2009, max_year=2019)
                               
 gamye_prep<-prepare_model(data_gam,model="gamye")
 
 #quick model with too few iterations
-gamye_mod <- run_model(gamye_prep,save_model=FALSE, iter_warmup=10,iter_sampling=20, chains=2)
+gamye_mod <- run_model(gamye_prep,save_model=FALSE, iter_warmup=500,iter_sampling=100, chains=2)
                                
 gamye_ind <- generate_indices(gamye_mod,regions = c("continent"))
   
@@ -440,29 +441,21 @@ For all of the models, the BBS counts on a given route and year are modeled as P
 
 The heavy-tailed version is well supported for many species, particularly species that are sometimes observed in large groups. Note: the heavy-tailed version can require significantly more time to converge (\~2-5 fold increase in processing time).
 
+Here we create a model for a 10 year period, using the minimum number of iterations. We reccommend using the defaults, 4 chains, 1000 iterations.
+
 ``` {.r}
 
 strat<-stratify(by="bbs_usgs",species="Hepatic Tanager")
-d<-prepare_data(strat,min_max_route_years = 3)
+d<-prepare_data(strat,min_year=2009, max_year=2019)
 m<-prepare_model(d,model = "first_diff",heavy_tailed = TRUE)
-mod<-run_model(model_data=m,chains=3,iter_warmup = 20,iter_sampling = 20,save_model = FALSE)
+mod<-run_model(model_data=m,chains=2,iter_warmup = 500,iter_sampling = 100,save_model = FALSE)
 
-m2<-prepare_model(d,model = "first_diff",heavy_tailed = FALSE)
-mod2<-run_model(model_data=m2,chains=3,iter_warmup = 20,iter_sampling = 20,save_model = FALSE)
 
 #get heavy tailed plots
 heavy_t<-mod %>%
 generate_indices(regions="prov_state")%>%
 plot_indices()
 
-#get normal tailed plots
-light_t<-mod2 %>%
-generate_indices(regions="prov_state")%>%
-plot_indices()
-
-#compare plots
-library(patchwork)
-heavy_t[["TX"]]+light_t[["TX"]]
 ```
 
 ## Alternate Annual Indices and Resulting Trends
@@ -551,20 +544,22 @@ The default trend calculation is an interval-specific estimate of the geometric 
 
 The user can choose an alternative estimate of change that is calculated by fitting a log-linear slope to the series of all annual indices between the two end-points (e.g., all 11 years in a 10-year trend from 2008-2018). The slope of this line could be expressed as an average annual percent change across the time-period of interest. If working with estimates derived from a model with strong annual fluctuations and for which no decomposition is possible (e.g., "firstdiff" model), this slope-based trend may be a more comprehensive measure of the average population change, that is less dependent on the particular end-point years. These slope trends can be added to the trend output table by setting the `slope = TRUE` argument in `generate_trends()`. The standard trends are still calculated, but additional columns are added that include the alternate estimates. NOTE: the `plot_map()` function can map slope trends as well with the same `slope = TRUE` argument.
 
+Here we create a model for a 10 year period, using the minimum number of iterations. We reccommend using the defaults, 4 chains, 1000 iterations.
+
 ``` {.r}
 
-strat<- stratify(by="bbs_usgs",species = "Cerulean Warbler")
-p_dat<-prepare_data(strat, min_max_route_years = 3)
+strat<- stratify(by="bbs_usgs",species = "Hepatic Tanager")
+p_dat<-prepare_data(strat, min_year=2009, max_year=2019)
 p_mod<-  prepare_model(p_dat, model = "first_diff",use_pois = TRUE)
 
-first_mod<- run_model(p_mod, chains=3,iter_warmup = 20,iter_sampling = 20,save_model = FALSE)
+first_mod<- run_model(p_mod, chains=2,iter_warmup = 500,iter_sampling = 100,save_model = FALSE)
 
 firstdiff_ind <- generate_indices(model_output = first_mod,
                                 regions = c("continent","stratum"))
                                 
 fd_slope_trends_08_18 <- generate_trends(indices = firstdiff_ind,
-                                         min_year = 2008,
-                                         max_year = 2018,
+                                         min_year = 2010,
+                                         max_year = 2020,
                                          slope = TRUE)
 plot_map(fd_slope_trends_08_18,
          slope = TRUE)

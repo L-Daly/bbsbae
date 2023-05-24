@@ -71,9 +71,9 @@ s <- stratify(by = "WBPHS_2019", species = "Canada Jay", strata_custom = map)
 > regarding the `stratify()` step.
 
 Once stratified, the next couple of steps are the same, regardless of whether 
-we're using a custom stratification or not.
+we're using a custom stratification or not. Here we run a model for 10 years of data, to speed things up.
 ```{r}
-p <- prepare_data(s)
+p <- prepare_data(s, min_year = 2009, max_year = 2019)
 ```
 
 Prepare and run the model (note this is not an appropriate model, as we're aiming for speed
@@ -81,7 +81,7 @@ rather than accuracy).
 ```{r}
 #a quick mdoel with too few iterations
 m <- prepare_model(p, model = "first_diff") %>%
-  run_model(chains = 2, iter_sampling = 20, iter_warmup = 20)
+  run_model(chains = 2, iter_sampling = 100, iter_warmup = 500)
 ```
 
 

@@ -31,9 +31,9 @@ If not, install with `fetch_bbs_data()`
 fetch_bbs_data()
 ```
 
-Let's start by loading an example model, the Hepatic Tanager gamye model which has 1000 iterations and 4 chains
+Let's start by loading an example model, the Hepatic Tanager gamye model which has 1000 iterations and 4 chains. Models can be downloaded from HERE
 ```{r}
-heta_gamye <-readRDS("~/Git/bbsBayes2/data/HETA_bbs_usgs_gamye.rds")
+heta_gamye <-readRDS("HETA_bbs_usgs_gamye.rds")
 ```
 
 Here is the code to generate the above model. User beware, even though this species is range restricted, this model will take over 20 minutes to run!
