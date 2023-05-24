@@ -1,0 +1,1 @@
+data/BASW_spatial_gamye.rds filter=lfs diff=lfs merge=lfs -text
