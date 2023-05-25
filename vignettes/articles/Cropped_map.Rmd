@@ -1,0 +1,57 @@
+---
+title: "Cropped trend map"
+author: "LD"
+date: "2023-05-25"
+output: html_document
+---
+
+Here is an example of how to produce cropped trend maps, including only the regions with trends for a given species.
+
+##Load packages
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(bbsBayes2)
+library(sf)
+```
+
+###Create your model
+
+Download the Hepatic Tanager GAMYE model, by clicking "Download" here: https://github.com/L-Daly/bbsbae/blob/25eeb0f974bcdf832b8375422a9ac57c046c62c2/data/HETA_bbs_usgs_gamye.rds . OR run the model using the code below, which may take over 20 minutes.
+```{r}
+mod<-stratify(by="bbs_usgs",species="Hepatic Tanager")%>%
+  prepare_data()%>%
+  prepare_model(model="gamye",model_variant = "hier")%>%
+  run_model(chains=4,iter_warmup = 1000,iter_sampling = 1000)
+```
+
+###Prepare your components.
+```{r}
+
+```
+```{r}
+#load a map with the same stratifications
+map<-load_map(stratify_by = "bbs_usgs")
+#load the trends 
+t<-generate_indices(mod)%>%
+  generate_trends()
+#create dataframe of trends and strata names, removing the continental trend
+trend<-data.frame(c(t$trends$trend),c(t$trends$strata_included))[-1,]
+names(trend)<-c("Trend","strata_name")
+```
+
+###Fine-tune your map
+Filter out strata without trends and add the trends to the map.
+```{r}
+map1<-map%>%
+  filter(strata_name %in% strata)
+map2<-inner_join(map1,trend,by="strata_name")
+```
+
+###Plot it up
+Lastly, plot it!
+```{r}
+ggplot()+
+  geom_sf(data=map2,aes(fill=Trend))
+```
